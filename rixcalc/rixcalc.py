@@ -57,43 +57,6 @@ class Rixcalc(PVGroup):
         precision=3,
     )
 
-
-#    us_h_focus = pvproperty(
-#        value=0.0,
-#        name='MR3K2_US_H_FOCUS',
-#        record='ai',
-#        read_only=True,
-#        doc='MR3K2 Upstream Horizontal Focus',
-#        precision=3,
-#    )
-#
-#    ds_h_focus = pvproperty(
-#        value=0.0,
-#        name='MR3K2_DS_H_FOCUS',
-#        record='ai',
-#        read_only=True,
-#        doc='MR3K2 Downstream Horizontal Focus',
-#        precision=3,
-#    )
-#
-#    us_v_focus = pvproperty(
-#        value=0.0,
-#        name='MR4K2_US_V_FOCUS',
-#        record='ai',
-#        read_only=True,
-#        doc='MR4K2 Upstream Vertical Focus',
-#        precision=3,
-#    )
-#
-#    ds_v_focus = pvproperty(
-#        value=0.0,
-#        name='MR4K2_DS_V_FOCUS',
-#        record='ai',
-#        read_only=True,
-#        doc='MR4K2 Downstream Vertical Focus',
-#        precision=3,
-#    )
-
     mr3k2_focus = pvproperty(
         value=0.0,
         name='MR3K2_FOCUS',
@@ -135,18 +98,13 @@ class Rixcalc(PVGroup):
 
         target_mono_energy, current_mono_energy, fel_set = get_E()
         mr1k1 = get_benders()
-        #mr3k2_h_1, mr3k2_h_2, mr4k2_v_1, mr4k2_v_2 = get_KBs()
+        mr3k2_h_1, mr3k2_h_2, mr4k2_v_1, mr4k2_v_2 = get_KBs()
         linear_dispersion = get_lin_disp()
 
         await self.tar_mono_energy.write(value = target_mono_energy)
         await self.mono_e.write(value = current_mono_energy)
         await self.fel_e.write(value = fel_set)
         await self.mr1k1_focus.write(value = mr1k1)
-        #await self.us_h_focus.write(value = mr3k2_h_1)
-        #await self.ds_h_focus.write(value = mr3k2_h_2)
-        #await self.us_v_focus.write(value = mr4k2_v_1)
-        #await self.ds_v_focus.write(value = mr4k2_v_2)
-        
         await self.mr3k2_focus.write(value = mr3k2_h_2)
         await self.mr4k2_focus.write(value = mr4k2_v_2)
         await self.lin_disp.write(value = linear_dispersion)
