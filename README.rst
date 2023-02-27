@@ -9,7 +9,7 @@ rixcalc
         :target: https://pypi.python.org/pypi/rixcalc
 
 
-General Purpose IOC for using python to calculate and build various PVs for RIX hutch
+This is a caproto based IOC for the purpose of performing python based calculation, and converting the outputs to usable PVs.
 
 Documentation
 -------------
