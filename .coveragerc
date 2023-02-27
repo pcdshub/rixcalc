@@ -1,0 +1,11 @@
+[run]
+source =
+    rixcalc
+[report]
+omit =
+    #versioning
+    .*version.*
+    *_version.py
+    #tests
+    *test*
+    rixcalc/tests/*
