@@ -13,13 +13,20 @@ from caproto.sync.client import read
 import numpy as np
 import time
 import os
+import pathlib
 
 import logging
 logger = logging.getLogger(__name__)
 
 
 # path to the folder with benders calibration files
-path_calib = os.getcwd()+'/rixcalc'
+# path_calib = os.getcwd()+'/rixcalc'
+
+script_directory = pathlib.Path(__file__).resolve().parent
+
+mr1k1_file = script_directory / "MR1K1.txt"
+mr3k2_file = script_directory / "MR3K2.txt"
+mr4k2_file = script_directory / "MR4K2.txt"
 
 # KBs benders PVs
 PV_usH = 'MR3K2:KBH:MMS:BEND:US'
@@ -36,8 +43,8 @@ def get_KBs():
     '''
 
     # bender tables for MR3K2 and MR4K2
-    qH, usH, dsH = np.loadtxt(path_calib+'/MR3K2.txt', unpack=True)
-    qV, usV, dsV = np.loadtxt(path_calib+'/MR4K2.txt', unpack=True)
+    qH, usH, dsH = np.loadtxt(mr3k2_file, unpack=True)
+    qV, usV, dsV = np.loadtxt(mr4k2_file, unpack=True)
     # ChemRIXS distance from MR3K2 and MR4K2
     dH = 8.8
     dV = 7.3
@@ -153,7 +160,7 @@ def get_benders(*args):
     PV_us = 'MR1K1:BEND:MMS:US'
     PV_ds = 'MR1K1:BEND:MMS:DS'
     # bender table for MR1K1
-    qMR1, usMR1, dsMR1 = np.loadtxt(path_calib+'/MR1K1.txt', unpack=True)
+    qMR1, usMR1, dsMR1 = np.loadtxt(mr1k1_file, unpack=True)
 
     try:
         temppv = EpicsSignal(PV_us+'.RBV')
