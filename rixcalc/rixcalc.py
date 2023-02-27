@@ -147,6 +147,6 @@ class Rixcalc(PVGroup):
         #await self.us_v_focus.write(value = mr4k2_v_1)
         #await self.ds_v_focus.write(value = mr4k2_v_2)
         
-        #await self.mr3k2_focus.write(value = mr3k2_h_2)
-        #await self.mr4k2_focus.write(value = mr4k2_v_2)
+        await self.mr3k2_focus.write(value = mr3k2_h_2)
+        await self.mr4k2_focus.write(value = mr4k2_v_2)
         await self.lin_disp.write(value = linear_dispersion)
