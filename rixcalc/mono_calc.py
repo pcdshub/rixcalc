@@ -59,7 +59,7 @@ def get_lin_disp():
     virt_source_dist = -7540.0458 # Virtual source distance from grating (mm)
     rad_curv = 9*(10**99) # Radius of curvature (mm)
 
-    PHOTON_E = 'RIX:USER:MCC:EPHOTK:SET1'
+    PHOTON_E = 'SP1K1:MONO:CALC:ENERGY'
     try:
         temppv = EpicsSignal(PHOTON_E)
         photon_energy = temppv.get()

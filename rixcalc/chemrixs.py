@@ -1,10 +1,3 @@
-'''
-Helper functions for RIX beamline
-K. Kunnus, 11/15/2021
-
-update 07/19/2022:
-Reporting read-back values (RBV) of the Epics PVs and better handling of mono drifting
-'''
 import ophyd
 from ophyd.signal import EpicsSignal
 from caproto import ChannelData, ChannelType
@@ -17,10 +10,6 @@ import pathlib
 
 import logging
 logger = logging.getLogger(__name__)
-
-
-# path to the folder with benders calibration files
-# path_calib = os.getcwd()+'/rixcalc'
 
 script_directory = pathlib.Path(__file__).resolve().parent
 
