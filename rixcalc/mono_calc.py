@@ -1,13 +1,6 @@
 """
 Calculation for Linear Dispersion of the Mono in the exit slit plane
 """
-
-
-import ophyd
-from ophyd.signal import EpicsSignal
-from caproto import ChannelData, ChannelType
-from caproto.server import AsyncLibraryLayer, PVGroup, pvproperty
-from caproto.sync.client import read
 import numpy as np
 import time
 import os
@@ -49,7 +42,12 @@ def calc_lambda(photon_energy):
     return lambda_calc
 
 
-def get_lin_disp():
+def get_lin_disp(photon_energy):
+    '''
+    Calculates the reciprocal linear dispersion of the monochromator through the exit slit plane
+    Arguments: The photon energy of the beam
+    Returns: The reciprocal linear dispersion
+    '''
 
     # Constants
     groove_density = 50 # Groove density (l/mm)
@@ -58,13 +56,6 @@ def get_lin_disp():
     grating_inc_angle = 88.627325 # Incidence angle grating (deg)
     virt_source_dist = -7540.0458 # Virtual source distance from grating (mm)
     rad_curv = 9*(10**99) # Radius of curvature (mm)
-
-    PHOTON_E = 'SP1K1:MONO:CALC:ENERGY'
-    try:
-        temppv = EpicsSignal(PHOTON_E)
-        photon_energy = temppv.get()
-    except:
-        logger.info('Failed to read PV: ' + PV_SET1)
 
     Beta = calc_beta(photon_energy,diff_order,groove_density,grating_inc_angle)
     Lambda = calc_lambda(photon_energy)
