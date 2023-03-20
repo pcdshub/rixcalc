@@ -6,20 +6,20 @@ from .mono_calc import get_lin_disp
 from caproto.server import PVGroup, ioc_arg_parser, pvproperty, run
 
 class PvSubscribeHelper:
-    # These are type hints that tell our IDE that this class has a "value1"
+    # These are type hints that tell our IDE that this class has a "mr1k1_bend_us_pos"
     # attribute that should be a float but sometimes might be uninitialized -
     # or None
-    value1: Optional[float]
-    value2: Optional[float]
-    value3: Optional[float]
-    value4: Optional[float]
-    value5: Optional[float]
-    value6: Optional[float]
-    value7: Optional[float]
-    value8: Optional[float]
-    value9: Optional[float]
-    value10: Optional[float]
-    value11: Optional[float]
+    mr1k1_bend_us_pos: Optional[float]
+    mr1k1_bend_ds_pos: Optional[float]
+    mr3k2_kbh_us_pos: Optional[float]
+    mr3k2_kbh_ds_pos: Optional[float]
+    mr4k2_kbh_us_pos: Optional[float]
+    mr4k2_kbh_ds_pos: Optional[float]
+    mono_gpi_rbv: Optional[float]
+    mono_gpi_sp: Optional[float]
+    mono_mpi_rbv: Optional[float]
+    mono_mpi_sp: Optional[float]
+    mono_e: Optional[float]
 
 
     # Let's keep track of the signals we have. Let's map each signal
@@ -28,46 +28,41 @@ class PvSubscribeHelper:
 
     def __init__(self):
         # On initialization, we don't have values just yet!
-        self.value1 = None
-        self.value2 = None
-        self.value3 = None
-        self.value4 = None
-        self.value5 = None
-        self.value6 = None
-        self.value7 = None
-        self.value8 = None
-        self.value9 = None
-        self.value10 = None
-        self.value11 = None
+        self.mr1k1_bend_us_pos = None
+        self.mr1k1_bend_ds_pos = None
+        self.mr3k2_kbh_us_pos = None
+        self.mr3k2_kbh_ds_pos = None
+        self.mr4k2_kbh_us_pos = None
+        self.mr4k2_kbh_ds_pos = None
+        self.mono_gpi_rbv = None
+        self.mono_gpi_sp = None
+        self.mono_mpi_rbv = None
+        self.mono_mpi_sp = None
+        self.mono_e = None
 
         self.subscribe()
 
     def subscribe(self):
         self.signals = {
-            EpicsSignalRO("MR1K1:BEND:MMS:US"): "value1",
-            EpicsSignalRO("MR1K1:BEND:MMS:DS"): "value2",
-            EpicsSignalRO("MR3K2:KBH:MMS:BEND:US"): "value3",
-            EpicsSignalRO("MR3K2:KBH:MMS:BEND:DS"): "value4",
-            EpicsSignalRO("MR4K2:KBV:MMS:BEND:US"): "value5",
-            EpicsSignalRO("MR4K2:KBV:MMS:BEND:DS"): "value6",
-            EpicsSignalRO("SP1K1:MONO:MMS:G_PI.RBV"): "value7",
-            EpicsSignalRO("SP1K1:MONO:MMS:G_PI"): "value8",
-            EpicsSignalRO("SP1K1:MONO:MMS:M_PI.RBV"): "value9",
-            EpicsSignalRO("SP1K1:MONO:MMS:M_PI"): "value10",
-            EpicsSignalRO("SP1K1:MONO:CALC:ENERGY"): "value11",
+            EpicsSignalRO("MR1K1:BEND:MMS:US.RBV"): "mr1k1_bend_us_pos",
+            EpicsSignalRO("MR1K1:BEND:MMS:DS.RBV"): "mr1k1_bend_ds_pos",
+            EpicsSignalRO("MR3K2:KBH:MMS:BEND:US.RBV"): "mr3k2_kbh_us_pos",
+            EpicsSignalRO("MR3K2:KBH:MMS:BEND:DS.RBV"): "mr3k2_kbh_ds_pos",
+            EpicsSignalRO("MR4K2:KBV:MMS:BEND:US.RBV"): "mr4k2_kbh_us_pos",
+            EpicsSignalRO("MR4K2:KBV:MMS:BEND:DS.RBV"): "mr4k2_kbh_ds_pos",
+            EpicsSignalRO("SP1K1:MONO:MMS:G_PI.RBV"): "mono_gpi_rbv",
+            EpicsSignalRO("SP1K1:MONO:MMS:G_PI"): "mono_gpi_sp",
+            EpicsSignalRO("SP1K1:MONO:MMS:M_PI.RBV"): "mono_mpi_rbv",
+            EpicsSignalRO("SP1K1:MONO:MMS:M_PI"): "mono_mpi_sp",
+            EpicsSignalRO("SP1K1:MONO:CALC:ENERGY"): "mono_e",
         }
 
         for sig in self.signals:
             sig.subscribe(self.value_update_callback)
 
     def value_update_callback(self, value, obj: EpicsSignalRO, **kwargs):
-        print("A value updated from", obj)
-        print("The new value is", value)
-
         attribute_name = self.signals[obj]
-        print("This should go to the", attribute_name, "attribute")
         setattr(self, attribute_name, value)
-        print("Updated", attribute_name, "to", getattr(self, attribute_name))
 
 
 
@@ -155,17 +150,17 @@ class Rixcalc(PVGroup):
     @calc_update.scan(period=1.0, use_scan_field=True)
     async def calc_update(self, instance, async_lib):
         helper = self.pv_subscribe_helper
-        if not [x for x in (helper.value1, helper.value2, helper.value3, helper.value4, helper.value5, helper.value6) if x is None]:
-            mr1k1 = get_benders(helper.value1, helper.value2)
-            mr3k2_h_1, mr3k2_h_2, mr4k2_v_1, mr4k2_v_2 = get_KBs(helper.value3, helper.value4, helper.value5, helper.value6)
+        if all(x is not None for x in (helper.mr1k1_bend_us_pos, helper.mr1k1_bend_ds_pos, helper.mr3k2_kbh_us_pos, helper.mr3k2_kbh_ds_pos, helper.mr4k2_kbh_us_pos, helper.mr4k2_kbh_ds_pos)) :
+            mr1k1 = get_benders(helper.mr1k1_bend_us_pos, helper.mr1k1_bend_ds_pos)
+            mr3k2_h_1, mr3k2_h_2, mr4k2_v_1, mr4k2_v_2 = get_KBs(helper.mr3k2_kbh_us_pos, helper.mr3k2_kbh_ds_pos, helper.mr4k2_kbh_us_pos, helper.mr4k2_kbh_ds_pos)
  
             await self.mr1k1_focus.write(mr1k1)
             await self.mr3k2_focus.write(mr3k2_h_2)
             await self.mr4k2_focus.write(mr4k2_v_2)
 
-        if not [x for x in (helper.value7, helper.value8, helper.value9, helper.value10, helper.value11) if x is None]:
-            current_mono_energy, target_mono_energy = get_E(helper.value7, helper.value8, helper.value9, helper.value10)
-            linear_dispersion = get_lin_disp(helper.value11)
+        if all(x is not None for x in (helper.mono_gpi_rbv, helper.mono_gpi_sp, helper.mono_mpi_rbv, helper.mono_mpi_sp, helper.mono_e)):
+            current_mono_energy, target_mono_energy = get_E(helper.mono_gpi_rbv, helper.mono_gpi_sp, helper.mono_mpi_rbv, helper.mono_mpi_sp)
+            linear_dispersion = get_lin_disp(helper.mono_e)
 
             await self.mono_e.write(current_mono_energy)
             await self.tar_mono_energy.write(target_mono_energy)
