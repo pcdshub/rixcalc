@@ -1,8 +1,3 @@
-import ophyd
-from ophyd.signal import EpicsSignal
-from caproto import ChannelData, ChannelType
-from caproto.server import AsyncLibraryLayer, PVGroup, pvproperty
-from caproto.sync.client import read
 import numpy as np
 import time
 import os
@@ -17,18 +12,12 @@ mr1k1_file = script_directory / "MR1K1.txt"
 mr3k2_file = script_directory / "MR3K2.txt"
 mr4k2_file = script_directory / "MR4K2.txt"
 
-# KBs benders PVs
-PV_usH = 'MR3K2:KBH:MMS:BEND:US'
-PV_dsH = 'MR3K2:KBH:MMS:BEND:DS'
-PV_usV = 'MR4K2:KBV:MMS:BEND:US'
-PV_dsV = 'MR4K2:KBV:MMS:BEND:DS'
-
-def get_KBs():
+def get_KBs(usH0, dsH0, usV0, dsV0):
     '''
     Displays current focus position from ChemRIXS IP.
     Focus position is calculated based on the KBs benders calibration.
-    Arguments: None
-    Returns: None
+    Arguments: MR3K2 Upstream, MR3K2 Downstream, MR4K2 Upstream, MR4K2 Downstream
+    Returns: Upstream and Downstream horizontal focus, Upstream and Downstream vertical focus
     '''
 
     # bender tables for MR3K2 and MR4K2
@@ -37,18 +26,6 @@ def get_KBs():
     # ChemRIXS distance from MR3K2 and MR4K2
     dH = 8.8
     dV = 7.3
-
-    try:
-        temppv = EpicsSignal(PV_usH+'.RBV')
-        usH0 = temppv.get()
-        temppv = EpicsSignal(PV_dsH+'.RBV')
-        dsH0 = temppv.get()
-        temppv = EpicsSignal(PV_usV+'.RBV')
-        usV0 = temppv.get()
-        temppv = EpicsSignal(PV_dsV+'.RBV')
-        dsV0 = temppv.get()
-    except:
-        logger.info('Failed to read PV')
 
     hor0 = np.interp(usH0, usH, qH, left=-1, right=-1)
     hor1 = np.interp(dsH0, dsH, qH, left=-1, right=-1)
@@ -71,44 +48,13 @@ def get_KBs():
 
     return final_up_h, final_ds_h, final_up_v, final_ds_v
 
-def get_E():
+def get_E(pitchG, pitchG_target, pitchM2, pitchM2_target):
     '''
     Reports current photon energy and Cff for based on current grating and pre-mirror pitch target and RBV.
     Reports the FEL set energy.
-    Arguments: none
-    Returns:   none
+    Arguments: Mono G Pi RBV, Mono G Pi, Mono M Pi RBV, Mono M Pi
+    Returns:   Current mono energy, target mono energy
     '''
-
-    PV_pitchG = 'SP1K1:MONO:MMS:G_PI'
-    PV_pitchM2 = 'SP1K1:MONO:MMS:M_PI'
-    PV_SET1 = 'RIX:USER:MCC:EPHOTK:SET1'
-
-    try:
-        temppv = EpicsSignal(PV_pitchG+'.RBV')
-        pitchG = temppv.get()
-    except:
-        logger.info('Failed to read PV: ' + PV_pitchG+'.RBV')
-    try:
-        temppv = EpicsSignal(PV_pitchG)
-        pitchG_target = temppv.get()
-    except:
-        logger.info('Failed to read PV: ' + PV_pitchG)
-    try:
-        temppv = EpicsSignal(PV_pitchM2+'.RBV')
-        pitchM2 = temppv.get()
-    except:
-        logger.info('Failed to read PV: ' + PV_pitchM2+'.RBV')
-    try:
-        temppv = EpicsSignal(PV_pitchM2)
-        pitchM2_target = temppv.get()
-    except:
-        logger.info('Failed to read PV: ' + PV_pitchM2)
-    try:
-        temppv = EpicsSignal(PV_SET1)
-        E_FEL = temppv.get()
-    except:
-        logger.info('Failed to read PV: ' + PV_SET1)
-
 
     # constants
     eVmm = 0.001239842 # Wavelenght[mm] = eVmm/Energy[eV]
@@ -128,44 +74,28 @@ def get_E():
     Cff = np.cos(beta)/np.cos(alpha)
 
     # target
-    pG = pitchG_target*1e-6 - offsetG
-    pM2 = pitchM2_target*1e-6 - offsetM2
-    alpha = np.pi/2 - pG + 2*pM2 - thetaM1
-    beta = -np.pi/2 - pG + thetaES
-    E_target = m*D0*eVmm/(np.sin(alpha) + np.sin(beta))
-    Cff_target = np.cos(beta)/np.cos(alpha)
+    pG_tar = pitchG_target*1e-6 - offsetG
+    pM2_tar = pitchM2_target*1e-6 - offsetM2
+    alpha_tar = np.pi/2 - pG_tar + 2*pM2_tar - thetaM1
+    beta_tar = -np.pi/2 - pG_tar + thetaES
+    E_target = m*D0*eVmm/(np.sin(alpha_tar) + np.sin(beta_tar))
+    Cff_target = np.cos(beta_tar)/np.cos(alpha_tar)
 
-    return E_target, E, E_FEL
+    return E, E_target
 
-def get_benders(*args):
+def get_benders(mr1k1_us, mr1k1_ds):
     '''
     Calculates MR1K1 benders current focus position.
     Focus position is calculated based on the MR1K1 benders calibration.
-    Arguments: None
+    Arguments: MR1K1 downstream position, MR1K1 upstream position
     Returns: None
     '''
 
-    # MR1K1 benders PVs
-    PV_us = 'MR1K1:BEND:MMS:US'
-    PV_ds = 'MR1K1:BEND:MMS:DS'
     # bender table for MR1K1
     qMR1, usMR1, dsMR1 = np.loadtxt(mr1k1_file, unpack=True)
 
-    try:
-        temppv = EpicsSignal(PV_us+'.RBV')
-        us = temppv.get()
-        logger.info('Upstream bender at {0:4.2f} mm'.format(us))
-    except:
-        logger.info('Failed to read PV: ' + PV_us)
-    try:
-        temppv = EpicsSignal(PV_ds+'.RBV')
-        ds = temppv.get()
-        logger.info('Downstream bender at {0:4.2f} mm'.format(ds))
-    except:
-        logger.info('Failed to read PV: ' + PV_ds)
-
-    q1 = np.interp(us, usMR1, qMR1, left=-1, right=-1)
-    q2 = np.interp(ds, dsMR1, qMR1, left=-1, right=-1)
+    q1 = np.interp(mr1k1_us, usMR1, qMR1, left=-1, right=-1)
+    q2 = np.interp(mr1k1_ds, dsMR1, qMR1, left=-1, right=-1)
     if q1<0 or q2<0:
         raise Exception('Bender value is out of range.')
     q0 = 0.5*(q1 + q2)
